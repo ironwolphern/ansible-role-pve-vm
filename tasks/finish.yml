@@ -1,6 +1,5 @@
 ---
 - name: "Finalize role | {{ _title_pfx }}"
-  become: true
   tags: always
   block:
     - name: "Header | Finish | {{ _title_pfx }}"
@@ -9,5 +8,5 @@
 
     - name: "Clean tmp files and directories | Finish | {{ _title_pfx }}"
       ansible.builtin.file:
-        path: "{{ example__tmp_dir }}"
+        path: "{{ pve_vm__tmp_dir }}"
         state: absent

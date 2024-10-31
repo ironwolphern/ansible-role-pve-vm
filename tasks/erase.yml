@@ -1,0 +1,58 @@
+---
+- name: "Erase Virtual Machine or Template in Proxmox VE | Erase | {{ _title_pfx }}"
+  tags: [never, erase]
+  block:
+    - name: "Header | Erase | {{ _title_pfx }}"
+      ansible.builtin.debug:
+        msg: "---------------------------------- ERASE VM OR TEMPLATE ----------------------------------"
+
+    - name: "Check required parameters | Erase | {{ _title_pfx }}"
+      ansible.builtin.assert:
+        that:
+          - "{{ item }}|d('',true)|length > 0"
+        fail_msg: "Required parameter '{{ item }}' is not defined."
+        success_msg: "Required parameter '{{ item }}' is ok."
+        quiet: true
+      loop:
+        - pve_vm__vm_settings.name
+
+    - name: "Check if VM or Template exists | Erase | {{ _title_pfx }}"
+      community.general.proxmox_vm_info:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        node: "{{ pve_vm__node }}"
+      register: _vm_info
+
+    - name: "If VM or Template exists | Erase | {{ _title_pfx }}"
+      when: _vm_info.proxmox_vms | length > 0
+      block:
+        - name: "Stop VM if Running | Erase | {{ _title_pfx }}"
+          when: _vm_info.proxmox_vms[0].status == "running"
+          community.general.proxmox_kvm:
+            api_host: "{{ pve_vm__api_host }}"
+            api_user: "{{ pve_vm__api_user }}"
+            api_password: "{{ pve_vm__api_password }}"
+            validate_certs: "{{ pve_vm__validate_certs }}"
+            name: "{{ pve_vm__vm_settings.name }}"
+            node: "{{ pve_vm__node }}"
+            state: "stopped"
+            force: "{{ pve_vm__vm_force_stop }}"
+
+        - name: "Erase VM or Template | Erase | {{ _title_pfx }}"
+          community.general.proxmox_kvm:
+            api_host: "{{ pve_vm__api_host }}"
+            api_user: "{{ pve_vm__api_user }}"
+            api_password: "{{ pve_vm__api_password }}"
+            validate_certs: "{{ pve_vm__validate_certs }}"
+            node: "{{ pve_vm__node }}"
+            name: "{{ pve_vm__vm_settings.name }}"
+            state: "absent"
+            force: "{{ pve_vm__vm_force_delete }}"
+
+    - name: "If VM or Template does not exist | Erase | {{ _title_pfx }}"
+      when: _vm_info.proxmox_vms | length == 0
+      ansible.builtin.debug:
+        msg: "VM or Template with name: {{ pve_vm__vm_settings.name }} does not exist"

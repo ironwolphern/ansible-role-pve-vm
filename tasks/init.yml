@@ -1,13 +1,12 @@
 ---
 - name: "Initialize role | {{ _title_pfx }}"
-  become: true
   tags: always
   block:
     - name: "Display title | Init | {{ _title_pfx }}"
       ansible.builtin.debug:
         msg:
           - "######################################################################################"
-          - "##                                   EXAMPLE ROLE                                   ##"
+          - "##                        PROXMOX VIRTUAL ENVIRONMENT VMs                           ##"
           - "######################################################################################"
 
     - name: "Header | Init | {{ _title_pfx }}"
@@ -16,7 +15,7 @@
 
     - name: "Ensure tmp directory exists | Init | {{ _title_pfx }}"
       ansible.builtin.file:
-        path: "{{ example__tmp_dir }}"
+        path: "{{ pve_vm__tmp_dir }}"
         state: directory
         mode: "0755"
 
@@ -28,4 +27,10 @@
         success_msg: "Required parameter '{{ item }}' is ok."
         quiet: true
       loop:
-        - example__tmp_dir
+        - pve_vm__api_host
+        - pve_vm__api_user
+        - pve_vm__api_password
+        - pve_vm__node
+        - pve_vm__vm_os_type
+        - pve_vm__vm_os_name
+        - pve_vm__vm_type

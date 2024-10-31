@@ -1,6 +1,12 @@
 ---
-- name: Test playbook
+- name: "Mange VMs on Proxmox VE"
   hosts: localhost
-  remote_user: root
-#  roles:
-#    - template-ansible-role
+  gather_facts: true
+
+  roles:
+    - role: ansible-role-pve-vm
+      vars:
+        pve_vm__api_host: "pve.example.local"
+        pve_vm__api_user: "root@pam"
+        pve_vm__api_password: "ChangeMe"
+        pve_vm__node: "pve"

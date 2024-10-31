@@ -1,3 +1,69 @@
 ---
 # Configuration paths
-example__tmp_dir: /tmp/example
+pve_vm__tmp_dir: /tmp/pve_vm
+
+# Proxmox VE API configuration
+pve_vm__api_host: "pve.example.com"
+pve_vm__api_user: "root@pam"
+pve_vm__api_password: "password"
+pve_vm__validate_certs: true
+pve_vm__node: "pve"
+
+# Default values of VM configuration
+pve_vm__vm_os_type: "linux" # "linux" | "windows"
+pve_vm__vm_os_name: "ubuntu" # "ubuntu" | "debian" | "centos" | "fedora" | "archlinux" | "opensuse" | "alpine" | "flatcar"
+pve_vm__vm_type: "tpl" # "tpl" | "iso"
+
+pve_vm__vm_settings:
+  name: ""
+  domain: "example.com"
+  clone: ""
+  cores: 1
+  sockets: 1
+  memory: 512
+  net: "vmbr0"
+  storage: "local-lvm"
+  disk_size: 5
+
+pve_vm__vm_force_delete: false
+pve_vm__vm_force_stop: true
+
+pve_vm__vm_template:
+  memory: 512
+  cores: 1
+  sockets: 1
+  net: "vmbr0"
+  storage: "local-lvm"
+  disk_size: 5
+
+# Default values of VM cloud init configuration
+pve_vm__host_snippets: "/var/lib/vz/snippets"
+
+pve_vm__user_data:
+  hostname: ""
+  fqdn: ""
+  users:
+    - name: "user"
+      ssh_authorized_keys: []
+      sudo: "ALL=(ALL) NOPASSWD:ALL"
+      groups: "sudo"
+      home: "/home/user"
+      shell: "/bin/bash"
+      lock_passwd: false
+      passwd: ""
+  packages: []
+  write_files: []
+  runcmd: []
+
+pve_vm__network_config:
+  net:
+    dhcp: true
+    addresses: [] # In CIDR notation
+    gateway: ""
+    dns_nameservers: []
+    dns_search: []
+    routes: []
+    # Example of routes:
+    #   - to: 0.0.0.0/0
+    #     via: 10.23.2.1
+    #     metric: 3

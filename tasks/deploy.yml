@@ -1,0 +1,50 @@
+---
+- name: "Deploy Virtual Machine in Proxmox VE | Deploy | {{ _title_pfx }}"
+  tags: [never, deploy]
+  block:
+    - name: "Header | Deploy | {{ _title_pfx }}"
+      ansible.builtin.debug:
+        msg: "---------------------------------- DEPLOY VM ----------------------------------"
+
+    - name: "Check required parameters for templates | Deploy | {{ _title_pfx }}"
+      ansible.builtin.assert:
+        that:
+          - "{{ item }}|d('',true)|length > 0"
+        fail_msg: "Required parameter '{{ item }}' is not defined."
+        success_msg: "Required parameter '{{ item }}' is ok."
+        quiet: true
+      when: pve_vm__vm_type == "tpl"
+      loop:
+        - pve_vm__vm_settings.name
+        - pve_vm__vm_settings.clone
+
+    - name: "Deploy Linux VM from template | Deploy | {{ _title_pfx }}"
+      ansible.builtin.import_tasks:
+        file: "deploy/linux/deploy-linux-vm-tpl.yml"
+      when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "tpl"
+
+#    - name: "Deploy Windows VM from template | Deploy | {{ _title_pfx }}"
+#      ansible.builtin.import_tasks:
+#        file: "deploy/windows/deploy-windows-vm-tpl.yml"
+#      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "tpl"
+#
+#    - name: "Check required parameters for ISO | Deploy | {{ _title_pfx }}"
+#      ansible.builtin.assert:
+#        that:
+#          - "{{ item }}|d('',true)|length > 0"
+#        fail_msg: "Required parameter '{{ item }}' is not defined."
+#        success_msg: "Required parameter '{{ item }}' is ok."
+#        quiet: true
+#      when: pve_vm__vm_type == "iso"
+#      loop:
+#
+#
+#    - name: "Deploy Linux VM from ISO image | Deploy | {{ _title_pfx }}"
+#      ansible.builtin.import_tasks:
+#        file: "deploy/linux/deploy-linux-vm-iso.yml"
+#      when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "iso"
+#
+#    - name: "Deploy Windows VM from ISO image | Deploy | {{ _title_pfx }}"
+#      ansible.builtin.import_tasks:
+#        file: "deploy/windows/deploy-windows-vm-iso.yml"
+#      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "iso"

@@ -1,0 +1,112 @@
+---
+- name: "Check if VM exists | Deploy | {{ _title_pfx }}"
+  community.general.proxmox_vm_info:
+    api_host: "{{ pve_vm__api_host }}"
+    api_user: "{{ pve_vm__api_user }}"
+    api_password: "{{ pve_vm__api_password }}"
+    validate_certs: "{{ pve_vm__validate_certs }}"
+    name: "{{ pve_vm__vm_settings.name }}"
+    node: "{{ pve_vm__node }}"
+  register: _vm_info
+
+- name: "If VM not exists | Deploy | {{ _title_pfx }}"
+  when: _vm_info.proxmox_vms | length == 0
+  block:
+    - name: "Create VM | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        clone: "{{ pve_vm__vm_settings.clone }}"
+        full: true
+        storage: "{{ pve_vm__vm_settings.storage }}"
+        state: "present"
+
+    - name: "Configure VM settings | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        cores: "{{ pve_vm__vm_settings.cores }}"
+        sockets: "{{ pve_vm__vm_settings.sockets }}"
+        memory: "{{ pve_vm__vm_settings.memory }}"
+        update: true
+        # update_unsafe: true
+
+    - name: "If VM is debian family | Deploy | {{ _title_pfx }}"
+      when: pve_vm__vm_os_name == "debian" or pve_vm__vm_os_name == "ubuntu"
+      block:
+        - name: "Generate user-data | Deploy | {{ _title_pfx }}"
+          ansible.builtin.template:
+            src: "cloud-init/debian/user-data-deb.j2"
+            dest: "{{ pve_vm__tmp_dir }}/user-data"
+            mode: "0644"
+
+        - name: "Generate network-config | Deploy | {{ _title_pfx }}"
+          ansible.builtin.template:
+            src: "cloud-init/debian/network-config-deb.j2"
+            dest: "{{ pve_vm__tmp_dir }}/network-config"
+            mode: "0644"
+
+    - name: "If VM is RedHat family | Deploy | {{ _title_pfx }}"
+      when: pve_vm__vm_os_name == "centos" or pve_vm__vm_os_name == "fedora"
+      block:
+        - name: "Generate user-data | Deploy | {{ _title_pfx }}"
+          ansible.builtin.template:
+            src: "cloud-init/redhat/user-data-rhel.j2"
+            dest: "{{ pve_vm__tmp_dir }}/user-data"
+            mode: "0644"
+
+        - name: "Generate network-config | Deploy | {{ _title_pfx }}"
+          ansible.builtin.template:
+            src: "cloud-init/redhat/network-config-rhel.j2"
+            dest: "{{ pve_vm__tmp_dir }}/network-config"
+            mode: "0644"
+
+    - name: "Copy user-data and network-config to Proxmox VE | Deploy | {{ _title_pfx }}"
+      ansible.builtin.copy:
+        src: "{{ pve_vm__tmp_dir }}/{{ item }}"
+        dest: "{{ pve_vm__host_snippets }}/{{ item }}"
+        mode: "0644"
+      delegate_to: "{{ pve_vm__api_host }}"
+      loop:
+        - "user-data"
+        - "network-config"
+
+    - name: "Configure Cloud-init settings | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        cicustom: "user=local:snippets/user-data,network=local:snippets/network-config"
+        update: true
+
+    - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_disk:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        disk: "scsi0"
+        size: "+{{ pve_vm__vm_settings.disk_size }}G"
+        state: "resized"
+
+    - name: "Start VM | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        state: "started"
