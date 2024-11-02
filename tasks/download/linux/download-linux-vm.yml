@@ -83,15 +83,10 @@
         update_unsafe: true
 
     - name: "Resize disk to new size | Download | {{ _title_pfx }}"
-      community.general.proxmox_disk:
-        api_host: "{{ pve_vm__api_host }}"
-        api_user: "{{ pve_vm__api_user }}"
-        api_password: "{{ pve_vm__api_password }}"
-        validate_certs: "{{ pve_vm__validate_certs }}"
-        vmid: "{{ pve_vm__template.id }}"
-        disk: "scsi0"
-        size: "+{{ pve_vm__vm_template.disk_size }}G"
-        state: "resized"
+      ansible.builtin.command:
+        cmd: "qm disk resize {{ pve_vm__template.id }} scsi0 {{ pve_vm__vm_template.storage }}G"
+      delegate_to: "{{ pve_vm__api_host }}"
+      changed_when: false
 
     - name: "Convert a template | Download | {{ _title_pfx }}"
       community.general.proxmox_kvm:

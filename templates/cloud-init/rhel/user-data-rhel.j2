@@ -3,7 +3,6 @@ hostname: {{ pve_vm__user_data.hostname }}
 {% if pve_vm__user_data.fqdn is defined and pve_vm__user_data.fqdn | length > 0 %}
 fqdn: {{ pve_vm__user_data.fqdn }}
 {% endif %}
-manage_etc_hosts: true
 
 # Users and Groups
 users:
@@ -22,7 +21,6 @@ users:
 # Package Management
 package_reboot_if_required: true
 package_update: true
-package_upgrade: true
 
 {% if pve_vm__user_data.packages is defined and pve_vm__user_data.packages | length > 0 %}
 packages: {{ pve_vm__user_data.packages }}

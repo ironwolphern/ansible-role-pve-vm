@@ -95,6 +95,7 @@
       ansible.builtin.command:
         cmd: "qm disk resize {{ _vm_id.vmid }} scsi0 {{ pve_vm__vm_settings.disk_size }}G"
       delegate_to: "{{ pve_vm__api_host }}"
+      changed_when: false
 
 # ALTERNATIVE WAY TO RESIZE DISK (LESS ACCURATE)
 #    - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
@@ -120,7 +121,7 @@
 
     - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
       ansible.builtin.shell:
-        cmd: "set -o pipefail && qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+        cmd: "qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
       register: _vm_ip
       until: _vm_ip.stdout != ""
       retries: 20
@@ -139,12 +140,6 @@
         state: "stopped"
         force: "{{ pve_vm__vm_force_stop }}"
         timeout: 300
-
-# ALTERNATIVE WAY TO DELETE CLOUD-INIT SETTINGS
-#    - name: "Remove cloud-init settings | Deploy | {{ _title_pfx }}"
-#      ansible.builtin.command:
-#        cmd: "qm set {{ _vm_id.vmid }} --delete ide2"
-#      delegate_to: "{{ pve_vm__api_host }}"
 
     - name: "Remove cloud-init settings | Deploy | {{ _title_pfx }}"
       community.general.proxmox_kvm:
@@ -175,7 +170,7 @@
         name: "{{ pve_vm__vm_settings.name }}"
         description: "{{ pve_vm__vm_settings.description }}"
         update: true
-      when: pve_vm__vm_settings.description is defined
+      when: pve_vm__vm_settings.description is defined and pve_vm__vm_settings.description | length > 0
 
     - name: "Add Tags to VM | Deploy | {{ _title_pfx }}"
       community.general.proxmox_kvm:
@@ -187,7 +182,7 @@
         name: "{{ pve_vm__vm_settings.name }}"
         tags: "{{ pve_vm__vm_settings.tags }}"
         update: true
-      when: pve_vm__vm_settings.tags is defined
+      when: pve_vm__vm_settings.tags is defined and pve_vm__vm_settings.tags | length > 0
 
     - name: "Protect VM from deletion | Deploy | {{ _title_pfx }}"
       community.general.proxmox_kvm:
@@ -212,7 +207,7 @@
 
     - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
       ansible.builtin.shell:
-        cmd: "set -o pipefail && qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+        cmd: "qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
       register: _vm_ip
       until: _vm_ip.stdout != ""
       retries: 20

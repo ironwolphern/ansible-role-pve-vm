@@ -1,6 +1,6 @@
 version: 2
 ethernets:
-  ens18:
+  eth0:
     dhcp4: {{ pve_vm__network_config.net.dhcp | lower}}
     optional: true
 {% if pve_vm__network_config.net.dhcp == false %}
