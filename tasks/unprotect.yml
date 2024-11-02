@@ -1,0 +1,44 @@
+---
+- name: "Unprotect Virtual Machine in Proxmox VE | Unprotect | {{ _title_pfx }}"
+  tags: [never, unprotect]
+  block:
+    - name: "Header | Unprotect | {{ _title_pfx }}"
+      ansible.builtin.debug:
+        msg: "---------------------------------- UNPROTECT VM ----------------------------------"
+
+    - name: "Check required parameters | Unprotect | {{ _title_pfx }}"
+      ansible.builtin.assert:
+        that:
+          - "{{ item }} | d('', true) | length > 0"
+        fail_msg: "Required parameter '{{ item }}' is not defined."
+        success_msg: "Required parameter '{{ item }}' is ok."
+        quiet: true
+      loop:
+        - pve_vm__vm_settings.name
+
+    - name: "Check if VM exists | Unprotect | {{ _title_pfx }}"
+      community.general.proxmox_vm_info:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+      register: _vm_info
+
+    - name: "If VM exists | Unprotect | {{ _title_pfx }}"
+      when: _vm_info.proxmox_vms | length > 0
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        protection: false
+        update: true
+
+    - name: "If VM does not exist | Unprotect | {{ _title_pfx }}"
+      when: _vm_info.proxmox_vms | length == 0
+      ansible.builtin.debug:
+        msg: "VM with name: {{ pve_vm__vm_settings.name }} does not exist"
