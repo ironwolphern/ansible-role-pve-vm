@@ -1,7 +1,4 @@
 ---
-# Configuration paths
-pve_vm__tmp_dir: /tmp/pve_vm
-
 # Proxmox VE API configuration
 pve_vm__api_host: "pve.example.com"
 pve_vm__api_user: "root@pam"
@@ -36,9 +33,6 @@ pve_vm__vm_template:
   storage: "local-lvm"
   disk_size: 5
 
-# Default values of VM cloud init configuration
-pve_vm__host_snippets: "/var/lib/vz/snippets"
-
 pve_vm__user_data:
   hostname: ""
   fqdn: ""
@@ -63,7 +57,3 @@ pve_vm__network_config:
     dns_nameservers: []
     dns_search: []
     routes: []
-    # Example of routes:
-    #   - to: 0.0.0.0/0
-    #     via: 10.23.2.1
-    #     metric: 3

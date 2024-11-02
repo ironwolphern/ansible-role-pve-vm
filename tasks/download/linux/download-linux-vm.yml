@@ -18,16 +18,16 @@
   when: _vm_info.proxmox_vms | length == 0
   block:
     - name: "Create tmp directory | Download | {{ _title_pfx }}"
-      ansible.builtin.file:
-        path: "{{ pve_vm__tmp_dir }}"
+      ansible.builtin.tempfile:
         state: directory
-        mode: "0755"
+        suffix: "pve_vm"
+      register: _tmp_host_dir
       delegate_to: "{{ pve_vm__api_host }}"
 
     - name: "Download cloud image | Download | {{ _title_pfx }}"
       ansible.builtin.get_url:
         url: "{{ pve_vm__template.url }}"
-        dest: "{{ pve_vm__tmp_dir }}/{{ pve_vm__template.file }}"
+        dest: "{{ _tmp_host_dir.path }}/{{ pve_vm__template.file }}"
         mode: "0644"
       delegate_to: "{{ pve_vm__api_host }}"
 
@@ -63,7 +63,7 @@
         api_password: "{{ pve_vm__api_password }}"
         validate_certs: "{{ pve_vm__validate_certs }}"
         vmid: "{{ pve_vm__template.id }}"
-        import_from: "{{ pve_vm__tmp_dir }}/{{ pve_vm__template.file }}"
+        import_from: "{{ _tmp_host_dir.path }}/{{ pve_vm__template.file }}"
         storage: "{{ pve_vm__vm_template.storage }}"
         disk: "scsi0"
         state: "present"
@@ -105,7 +105,7 @@
 
     - name: "Remove downloaded cloud image | Download | {{ _title_pfx }}"
       ansible.builtin.file:
-        path: "{{ pve_vm__tmp_dir }}"
+        path: "{{ _tmp_host_dir.path }}"
         state: "absent"
       delegate_to: "{{ pve_vm__api_host }}"
 

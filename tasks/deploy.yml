@@ -9,7 +9,7 @@
     - name: "Check required parameters for templates | Deploy | {{ _title_pfx }}"
       ansible.builtin.assert:
         that:
-          - "{{ item }}|d('',true)|length > 0"
+          - "{{ item }} | d('', true) | length > 0"
         fail_msg: "Required parameter '{{ item }}' is not defined."
         success_msg: "Required parameter '{{ item }}' is ok."
         quiet: true

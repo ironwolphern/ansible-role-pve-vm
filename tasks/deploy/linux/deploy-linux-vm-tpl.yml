@@ -24,6 +24,8 @@
         full: true
         storage: "{{ pve_vm__vm_settings.storage }}"
         state: "present"
+        timeout: 300
+      register: _vm_id
 
     - name: "Configure VM settings | Deploy | {{ _title_pfx }}"
       community.general.proxmox_kvm:
@@ -45,13 +47,13 @@
         - name: "Generate user-data | Deploy | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/debian/user-data-deb.j2"
-            dest: "{{ pve_vm__tmp_dir }}/user-data"
+            dest: "{{ _tmp_dir.path }}/user-data"
             mode: "0644"
 
         - name: "Generate network-config | Deploy | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/debian/network-config-deb.j2"
-            dest: "{{ pve_vm__tmp_dir }}/network-config"
+            dest: "{{ _tmp_dir.path }}/network-config"
             mode: "0644"
 
     - name: "If VM is RedHat family | Deploy | {{ _title_pfx }}"
@@ -60,19 +62,19 @@
         - name: "Generate user-data | Deploy | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/redhat/user-data-rhel.j2"
-            dest: "{{ pve_vm__tmp_dir }}/user-data"
+            dest: "{{ _tmp_dir.path }}/user-data"
             mode: "0644"
 
         - name: "Generate network-config | Deploy | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/redhat/network-config-rhel.j2"
-            dest: "{{ pve_vm__tmp_dir }}/network-config"
+            dest: "{{ _tmp_dir.path }}/network-config"
             mode: "0644"
 
     - name: "Copy user-data and network-config to Proxmox VE | Deploy | {{ _title_pfx }}"
       ansible.builtin.copy:
-        src: "{{ pve_vm__tmp_dir }}/{{ item }}"
-        dest: "{{ pve_vm__host_snippets }}/{{ item }}"
+        src: "{{ _tmp_dir.path }}/{{ item }}"
+        dest: "{{ _host_snippets }}/{{ item }}"
         mode: "0644"
       delegate_to: "{{ pve_vm__api_host }}"
       loop:
@@ -91,15 +93,20 @@
         update: true
 
     - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
-      community.general.proxmox_disk:
-        api_host: "{{ pve_vm__api_host }}"
-        api_user: "{{ pve_vm__api_user }}"
-        api_password: "{{ pve_vm__api_password }}"
-        validate_certs: "{{ pve_vm__validate_certs }}"
-        name: "{{ pve_vm__vm_settings.name }}"
-        disk: "scsi0"
-        size: "+{{ pve_vm__vm_settings.disk_size }}G"
-        state: "resized"
+      ansible.builtin.command:
+        cmd: "qm disk resize {{ _vm_id.vmid }} scsi0 {{ pve_vm__vm_settings.disk_size }}G"
+      delegate_to: "{{ pve_vm__api_host }}"
+
+#    - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
+#      community.general.proxmox_disk:
+#        api_host: "{{ pve_vm__api_host }}"
+#        api_user: "{{ pve_vm__api_user }}"
+#        api_password: "{{ pve_vm__api_password }}"
+#        validate_certs: "{{ pve_vm__validate_certs }}"
+#        name: "{{ pve_vm__vm_settings.name }}"
+#        disk: "scsi0"
+#        size: "+{{ pve_vm__vm_settings.disk_size }}G"
+#        state: "resized"
 
     - name: "Start VM | Deploy | {{ _title_pfx }}"
       community.general.proxmox_kvm:
@@ -110,3 +117,42 @@
         node: "{{ pve_vm__node }}"
         name: "{{ pve_vm__vm_settings.name }}"
         state: "started"
+
+    - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
+      ansible.builtin.shell:
+        cmd: "qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+      register: _vm_ip
+      until: _vm_ip.stdout != ""
+      retries: 20
+      delay: 30
+      delegate_to: "{{ pve_vm__api_host }}"
+
+    - name: "Print VM IP | Deploy | {{ _title_pfx }}"
+      ansible.builtin.debug:
+        msg: "VM IP: {{ _vm_ip.stdout }}"
+
+    - name: "Stop VM | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        state: "stopped"
+        force: "{{ pve_vm__vm_force_stop }}"
+        timeout: 300
+
+    - name: "Remove cloud-init settings | Deploy | {{ _title_pfx }}"
+      ansible.builtin.command:
+        cmd: "qm set {{ _vm_id.vmid }} --delete ide2"
+      delegate_to: "{{ pve_vm__api_host }}"
+
+    - name: "Remove user-data and network-config from Proxmox VE | Deploy | {{ _title_pfx }}"
+      ansible.builtin.file:
+        path: "{{ _host_snippets }}/{{ item }}"
+        state: "absent"
+      delegate_to: "{{ pve_vm__api_host }}"
+      loop:
+        - "user-data"
+        - "network-config"

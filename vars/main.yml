@@ -2,6 +2,9 @@
 # Title prefix for role
 _title_pfx: "{{ role_name | d('', true) }}"
 
+# Default values of VM cloud init configuration
+_host_snippets: "/var/lib/vz/snippets"
+
 # Proxmox VE Virtual Machine Templates for Linux Cloud Images
 _templates_linux:
   ubuntu:

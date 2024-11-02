@@ -8,5 +8,5 @@
 
     - name: "Clean tmp files and directories | Finish | {{ _title_pfx }}"
       ansible.builtin.file:
-        path: "{{ pve_vm__tmp_dir }}"
+        path: "{{ _tmp_dir.path }}"
         state: absent

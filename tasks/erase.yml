@@ -9,7 +9,7 @@
     - name: "Check required parameters | Erase | {{ _title_pfx }}"
       ansible.builtin.assert:
         that:
-          - "{{ item }}|d('',true)|length > 0"
+          - "{{ item }} | d('', true) | length > 0"
         fail_msg: "Required parameter '{{ item }}' is not defined."
         success_msg: "Required parameter '{{ item }}' is ok."
         quiet: true
@@ -40,6 +40,7 @@
             node: "{{ pve_vm__node }}"
             state: "stopped"
             force: "{{ pve_vm__vm_force_stop }}"
+            timeout: 300
 
         - name: "Erase VM or Template | Erase | {{ _title_pfx }}"
           community.general.proxmox_kvm:
@@ -51,6 +52,7 @@
             name: "{{ pve_vm__vm_settings.name }}"
             state: "absent"
             force: "{{ pve_vm__vm_force_delete }}"
+            timeout: 300
 
     - name: "If VM or Template does not exist | Erase | {{ _title_pfx }}"
       when: _vm_info.proxmox_vms | length == 0

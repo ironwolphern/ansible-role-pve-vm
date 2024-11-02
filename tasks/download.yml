@@ -11,7 +11,7 @@
         file: "download/linux/download-linux-vm.yml"
       when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "tpl"
 
-    - name: "Download cloud image for Windows VM | Download | {{ _title_pfx }}"
-      ansible.builtin.import_tasks:
-        file: "download/windows/download-windows-vm.yml"
-      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "tpl"
+#    - name: "Download cloud image for Windows VM | Download | {{ _title_pfx }}"
+#      ansible.builtin.import_tasks:
+#        file: "download/windows/download-windows-vm.yml"
+#      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "tpl"
