@@ -39,7 +39,6 @@
         sockets: "{{ pve_vm__vm_settings.sockets }}"
         memory: "{{ pve_vm__vm_settings.memory }}"
         update: true
-        # update_unsafe: true
 
     - name: "If VM is debian family | Deploy | {{ _title_pfx }}"
       when: pve_vm__vm_os_name == "debian" or pve_vm__vm_os_name == "ubuntu"
@@ -97,6 +96,7 @@
         cmd: "qm disk resize {{ _vm_id.vmid }} scsi0 {{ pve_vm__vm_settings.disk_size }}G"
       delegate_to: "{{ pve_vm__api_host }}"
 
+# ALTERNATIVE WAY TO RESIZE DISK (LESS ACCURATE)
 #    - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
 #      community.general.proxmox_disk:
 #        api_host: "{{ pve_vm__api_host }}"
@@ -120,16 +120,13 @@
 
     - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
       ansible.builtin.shell:
-        cmd: "qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+        cmd: "set -o pipefail && qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
       register: _vm_ip
       until: _vm_ip.stdout != ""
       retries: 20
       delay: 30
       delegate_to: "{{ pve_vm__api_host }}"
-
-    - name: "Print VM IP | Deploy | {{ _title_pfx }}"
-      ansible.builtin.debug:
-        msg: "VM IP: {{ _vm_ip.stdout }}"
+      changed_when: false
 
     - name: "Stop VM | Deploy | {{ _title_pfx }}"
       community.general.proxmox_kvm:
@@ -143,10 +140,21 @@
         force: "{{ pve_vm__vm_force_stop }}"
         timeout: 300
 
+# ALTERNATIVE WAY TO DELETE CLOUD-INIT SETTINGS
+#    - name: "Remove cloud-init settings | Deploy | {{ _title_pfx }}"
+#      ansible.builtin.command:
+#        cmd: "qm set {{ _vm_id.vmid }} --delete ide2"
+#      delegate_to: "{{ pve_vm__api_host }}"
+
     - name: "Remove cloud-init settings | Deploy | {{ _title_pfx }}"
-      ansible.builtin.command:
-        cmd: "qm set {{ _vm_id.vmid }} --delete ide2"
-      delegate_to: "{{ pve_vm__api_host }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        delete: "ide2"
 
     - name: "Remove user-data and network-config from Proxmox VE | Deploy | {{ _title_pfx }}"
       ansible.builtin.file:
@@ -156,3 +164,71 @@
       loop:
         - "user-data"
         - "network-config"
+
+    - name: "Add Description to VM | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        description: "{{ pve_vm__vm_settings.description }}"
+        update: true
+      when: pve_vm__vm_settings.description is defined
+
+    - name: "Add Tags to VM | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        tags: "{{ pve_vm__vm_settings.tags }}"
+        update: true
+      when: pve_vm__vm_settings.tags is defined
+
+    - name: "Protect VM from deletion | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        protection: true
+        update: true
+
+    - name: "Start VM | Deploy | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        state: "started"
+
+    - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
+      ansible.builtin.shell:
+        cmd: "set -o pipefail && qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+      register: _vm_ip
+      until: _vm_ip.stdout != ""
+      retries: 20
+      delay: 30
+      delegate_to: "{{ pve_vm__api_host }}"
+      changed_when: false
+
+    - name: "Print VM IP | Deploy | {{ _title_pfx }}"
+      ansible.builtin.debug:
+        msg:
+          - "VM deployed details:"
+          - "   Name:  {{ pve_vm__vm_settings.name }}"
+          - "   VM ID: {{ _vm_id.vmid }}"
+          - "   IP:    {{ _vm_ip.stdout }}"
+
+- name: "If VM exists | Deploy | {{ _title_pfx }}"
+  when: _vm_info.proxmox_vms | length > 0
+  ansible.builtin.debug:
+    msg: "VM with name: '{{ pve_vm__vm_settings.name }}' already exists"

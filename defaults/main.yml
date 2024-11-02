@@ -21,6 +21,8 @@ pve_vm__vm_settings:
   net: "vmbr0"
   storage: "local-lvm"
   disk_size: 5
+  description: ""
+  tags: []
 
 pve_vm__vm_force_delete: false
 pve_vm__vm_force_stop: true
