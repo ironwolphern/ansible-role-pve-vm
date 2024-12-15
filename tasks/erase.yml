@@ -40,7 +40,7 @@
             node: "{{ pve_vm__node }}"
             state: "stopped"
             force: "{{ pve_vm__vm_force_stop }}"
-            timeout: 300
+            # timeout: 300
 
         - name: "Erase VM or Template | Erase | {{ _title_pfx }}"
           community.general.proxmox_kvm:
@@ -52,7 +52,7 @@
             name: "{{ pve_vm__vm_settings.name }}"
             state: "absent"
             force: "{{ pve_vm__vm_force_delete }}"
-            timeout: 300
+            # timeout: 300
 
     - name: "If VM or Template does not exist | Erase | {{ _title_pfx }}"
       when: _vm_info.proxmox_vms | length == 0

@@ -1,5 +1,5 @@
 ---
-- name: "Check if VM exists | Deploy | {{ _title_pfx }}"
+- name: "Check if VM exists | Provision | Linux | TPL | {{ _title_pfx }}"
   community.general.proxmox_vm_info:
     api_host: "{{ pve_vm__api_host }}"
     api_user: "{{ pve_vm__api_user }}"
@@ -9,10 +9,10 @@
     node: "{{ pve_vm__node }}"
   register: _vm_info
 
-- name: "If VM not exists | Deploy | {{ _title_pfx }}"
+- name: "If VM not exists | Provision | Linux | TPL | {{ _title_pfx }}"
   when: _vm_info.proxmox_vms | length == 0
   block:
-    - name: "Create VM | Deploy | {{ _title_pfx }}"
+    - name: "Create VM | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -27,7 +27,7 @@
         timeout: 300
       register: _vm_id
 
-    - name: "Configure VM settings | Deploy | {{ _title_pfx }}"
+    - name: "Configure VM settings | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -40,37 +40,37 @@
         memory: "{{ pve_vm__vm_settings.memory }}"
         update: true
 
-    - name: "If VM is debian family | Deploy | {{ _title_pfx }}"
+    - name: "If VM is debian family | Provision | Linux | TPL | {{ _title_pfx }}"
       when: pve_vm__vm_os_name == "debian" or pve_vm__vm_os_name == "ubuntu"
       block:
-        - name: "Generate user-data | Deploy | {{ _title_pfx }}"
+        - name: "Generate user-data | Provision | Linux | TPL | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/debian/user-data-deb.j2"
             dest: "{{ _tmp_dir.path }}/user-data"
             mode: "0644"
 
-        - name: "Generate network-config | Deploy | {{ _title_pfx }}"
+        - name: "Generate network-config | Provision | Linux | TPL | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/debian/network-config-deb.j2"
             dest: "{{ _tmp_dir.path }}/network-config"
             mode: "0644"
 
-    - name: "If VM is RedHat family | Deploy | {{ _title_pfx }}"
+    - name: "If VM is RedHat family | Provision | Linux | TPL | {{ _title_pfx }}"
       when: pve_vm__vm_os_name == "centos" or pve_vm__vm_os_name == "fedora"
       block:
-        - name: "Generate user-data | Deploy | {{ _title_pfx }}"
+        - name: "Generate user-data | Provision | Linux | TPL | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/redhat/user-data-rhel.j2"
             dest: "{{ _tmp_dir.path }}/user-data"
             mode: "0644"
 
-        - name: "Generate network-config | Deploy | {{ _title_pfx }}"
+        - name: "Generate network-config | Provision | Linux | TPL | {{ _title_pfx }}"
           ansible.builtin.template:
             src: "cloud-init/redhat/network-config-rhel.j2"
             dest: "{{ _tmp_dir.path }}/network-config"
             mode: "0644"
 
-    - name: "Copy user-data and network-config to Proxmox VE | Deploy | {{ _title_pfx }}"
+    - name: "Copy user-data and network-config to Proxmox VE | Provision | Linux | TPL | {{ _title_pfx }}"
       ansible.builtin.copy:
         src: "{{ _tmp_dir.path }}/{{ item }}"
         dest: "{{ _host_snippets }}/{{ item }}"
@@ -80,7 +80,7 @@
         - "user-data"
         - "network-config"
 
-    - name: "Configure Cloud-init settings | Deploy | {{ _title_pfx }}"
+    - name: "Configure Cloud-init settings | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -91,14 +91,14 @@
         cicustom: "user=local:snippets/user-data,network=local:snippets/network-config"
         update: true
 
-    - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
+    - name: "Resize disk to new size | Provision | Linux | TPL | {{ _title_pfx }}"
       ansible.builtin.command:
         cmd: "qm disk resize {{ _vm_id.vmid }} scsi0 {{ pve_vm__vm_settings.disk_size }}G"
       delegate_to: "{{ pve_vm__api_host }}"
       changed_when: false
 
 # ALTERNATIVE WAY TO RESIZE DISK (LESS ACCURATE)
-#    - name: "Resize disk to new size | Deploy | {{ _title_pfx }}"
+#    - name: "Resize disk to new size | Provision | Linux | TPL | {{ _title_pfx }}"
 #      community.general.proxmox_disk:
 #        api_host: "{{ pve_vm__api_host }}"
 #        api_user: "{{ pve_vm__api_user }}"
@@ -109,7 +109,7 @@
 #        size: "+{{ pve_vm__vm_settings.disk_size }}G"
 #        state: "resized"
 
-    - name: "Start VM | Deploy | {{ _title_pfx }}"
+    - name: "Start VM | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -119,9 +119,12 @@
         name: "{{ pve_vm__vm_settings.name }}"
         state: "started"
 
-    - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
+    - name: "Wait for VM to be started | Provision | Linux | TPL | {{ _title_pfx }}"
       ansible.builtin.shell:
-        cmd: "qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+        cmd: >
+          set -o pipefail && qm guest cmd {{ _vm_id.vmid }} network-get-interfaces |
+          grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -v 127.0
+        executable: /bin/bash
       register: _vm_ip
       until: _vm_ip.stdout != ""
       retries: 20
@@ -129,7 +132,7 @@
       delegate_to: "{{ pve_vm__api_host }}"
       changed_when: false
 
-    - name: "Stop VM | Deploy | {{ _title_pfx }}"
+    - name: "Stop VM | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -141,7 +144,7 @@
         force: "{{ pve_vm__vm_force_stop }}"
         timeout: 300
 
-    - name: "Remove cloud-init settings | Deploy | {{ _title_pfx }}"
+    - name: "Remove cloud-init settings | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -151,7 +154,7 @@
         name: "{{ pve_vm__vm_settings.name }}"
         delete: "ide2"
 
-    - name: "Remove user-data and network-config from Proxmox VE | Deploy | {{ _title_pfx }}"
+    - name: "Remove user-data and network-config from Proxmox VE | Provision | Linux | TPL | {{ _title_pfx }}"
       ansible.builtin.file:
         path: "{{ _host_snippets }}/{{ item }}"
         state: "absent"
@@ -160,7 +163,7 @@
         - "user-data"
         - "network-config"
 
-    - name: "Add Description to VM | Deploy | {{ _title_pfx }}"
+    - name: "Add Description to VM | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -172,7 +175,7 @@
         update: true
       when: pve_vm__vm_settings.description is defined and pve_vm__vm_settings.description | length > 0
 
-    - name: "Add Tags to VM | Deploy | {{ _title_pfx }}"
+    - name: "Add Tags to VM | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -184,7 +187,7 @@
         update: true
       when: pve_vm__vm_settings.tags is defined and pve_vm__vm_settings.tags | length > 0
 
-    - name: "Protect VM from deletion | Deploy | {{ _title_pfx }}"
+    - name: "Protect VM from deletion | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -195,7 +198,7 @@
         protection: true
         update: true
 
-    - name: "Start VM | Deploy | {{ _title_pfx }}"
+    - name: "Start VM | Provision | Linux | TPL | {{ _title_pfx }}"
       community.general.proxmox_kvm:
         api_host: "{{ pve_vm__api_host }}"
         api_user: "{{ pve_vm__api_user }}"
@@ -205,25 +208,28 @@
         name: "{{ pve_vm__vm_settings.name }}"
         state: "started"
 
-    - name: "Wait for VM to be started | Deploy | {{ _title_pfx }}"
+    - name: "Wait for VM to be started | Provision | Linux | TPL | {{ _title_pfx }}"
       ansible.builtin.shell:
-        cmd: "qm guest cmd {{ _vm_id.vmid }} network-get-interfaces | jq -r '.[] | select(.name == \"ens18\") | .[\"ip-addresses\"][] | select(.[\"ip-address-type\"] == \"ipv4\") | .[\"ip-address\"]'"
+        cmd: >
+          set -o pipefail && qm guest cmd {{ _vm_id.vmid }} network-get-interfaces |
+          grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -v 127.0
+        executable: /bin/bash
       register: _vm_ip
       until: _vm_ip.stdout != ""
-      retries: 20
+      retries: 10
       delay: 30
       delegate_to: "{{ pve_vm__api_host }}"
       changed_when: false
 
-    - name: "Print VM IP | Deploy | {{ _title_pfx }}"
+    - name: "Print VM IP | Provision | Linux | TPL | {{ _title_pfx }}"
       ansible.builtin.debug:
         msg:
-          - "VM deployed details:"
+          - "VM provisioned details:"
           - "   Name:  {{ pve_vm__vm_settings.name }}"
           - "   VM ID: {{ _vm_id.vmid }}"
           - "   IP:    {{ _vm_ip.stdout }}"
 
-- name: "If VM exists | Deploy | {{ _title_pfx }}"
+- name: "If VM exists | Provision | Linux | TPL | {{ _title_pfx }}"
   when: _vm_info.proxmox_vms | length > 0
   ansible.builtin.debug:
     msg: "VM with name: '{{ pve_vm__vm_settings.name }}' already exists"

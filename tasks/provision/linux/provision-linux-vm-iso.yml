@@ -1,0 +1,26 @@
+---
+- name: "Check if VM exists | Provision | Linux | ISO | {{ _title_pfx }}"
+  community.general.proxmox_vm_info:
+    api_host: "{{ pve_vm__api_host }}"
+    api_user: "{{ pve_vm__api_user }}"
+    api_password: "{{ pve_vm__api_password }}"
+    validate_certs: "{{ pve_vm__validate_certs }}"
+    name: "{{ pve_vm__vm_settings.name }}"
+    node: "{{ pve_vm__node }}"
+  register: _vm_info
+
+- name: "If VM not exists | Provision | Linux | ISO | {{ _title_pfx }}"
+  when: _vm_info.proxmox_vms | length == 0
+  block:
+    - name: "Create VM | Provision | Linux | ISO | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        storage: "{{ pve_vm__vm_settings.storage }}"
+        state: "present"
+        timeout: 300
+      register: _vm_id

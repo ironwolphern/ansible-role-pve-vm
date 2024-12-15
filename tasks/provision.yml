@@ -1,12 +1,12 @@
 ---
-- name: "Deploy Virtual Machine in Proxmox VE | Deploy | {{ _title_pfx }}"
-  tags: [never, deploy]
+- name: "Provision Virtual Machine in Proxmox VE | Provision | {{ _title_pfx }}"
+  tags: [never, provision]
   block:
-    - name: "Header | Deploy | {{ _title_pfx }}"
+    - name: "Header | Provision | {{ _title_pfx }}"
       ansible.builtin.debug:
-        msg: "---------------------------------- DEPLOY VM ----------------------------------"
+        msg: "---------------------------------- PROVISION VM ----------------------------------"
 
-    - name: "Check required parameters for templates | Deploy | {{ _title_pfx }}"
+    - name: "Check required parameters for templates | Provision | {{ _title_pfx }}"
       ansible.builtin.assert:
         that:
           - "{{ item }} | d('', true) | length > 0"
@@ -18,17 +18,17 @@
         - pve_vm__vm_settings.name
         - pve_vm__vm_settings.clone
 
-    - name: "Deploy Linux VM from template | Deploy | {{ _title_pfx }}"
+    - name: "Provision Linux VM from template | Provision | {{ _title_pfx }}"
       ansible.builtin.import_tasks:
-        file: "deploy/linux/deploy-linux-vm-tpl.yml"
+        file: "provision/linux/provision-linux-vm-tpl.yml"
       when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "tpl"
 
-#    - name: "Deploy Windows VM from template | Deploy | {{ _title_pfx }}"
+#    - name: "Provision Windows VM from template | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
-#        file: "deploy/windows/deploy-windows-vm-tpl.yml"
+#        file: "provision/windows/provision-windows-vm-tpl.yml"
 #      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "tpl"
 #
-#    - name: "Check required parameters for ISO | Deploy | {{ _title_pfx }}"
+#    - name: "Check required parameters for ISO | Provision | {{ _title_pfx }}"
 #      ansible.builtin.assert:
 #        that:
 #          - "{{ item }}|d('',true)|length > 0"
@@ -39,12 +39,12 @@
 #      loop:
 #
 #
-#    - name: "Deploy Linux VM from ISO image | Deploy | {{ _title_pfx }}"
+#    - name: "Provision Linux VM from ISO image | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
-#        file: "deploy/linux/deploy-linux-vm-iso.yml"
+#        file: "provision/linux/provision-linux-vm-iso.yml"
 #      when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "iso"
 #
-#    - name: "Deploy Windows VM from ISO image | Deploy | {{ _title_pfx }}"
+#    - name: "Provision Windows VM from ISO image | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
-#        file: "deploy/windows/deploy-windows-vm-iso.yml"
+#        file: "provision/windows/provision-windows-vm-iso.yml"
 #      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "iso"

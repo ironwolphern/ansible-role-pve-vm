@@ -11,10 +11,10 @@
         file: download.yml
       tags: [never, download]
 
-    - name: "Deploy VM | {{ _title_pfx }}"
+    - name: "Provision VM | {{ _title_pfx }}"
       ansible.builtin.import_tasks:
-        file: deploy.yml
-      tags: [never, deploy]
+        file: provision.yml
+      tags: [never, provision]
 
     - name: "Unprotect VM | {{ _title_pfx }}"
       ansible.builtin.import_tasks:
