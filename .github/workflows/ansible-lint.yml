@@ -15,4 +15,4 @@ jobs:
       - name: Run ansible-lint
         uses: ansible/ansible-lint@v24.12.2
         with:
-          requirements_file: ../../requirements.yml
+          requirements_file: requirements.yml
