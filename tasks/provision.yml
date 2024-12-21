@@ -23,7 +23,7 @@
         file: "provision/linux/provision-linux-vm-tpl.yml"
       when: pve_vm__vm_os_type == "linux" and pve_vm__provision_type == "tpl"
 
-# Roadmap: Provision Windows VMs from templates
+#  Roadmap: Provision Windows VMs from templates
 #
 #    - name: "Provision Windows VM from template | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
@@ -47,7 +47,7 @@
         file: "provision/linux/provision-linux-vm-iso.yml"
       when: pve_vm__vm_os_type == "linux" and pve_vm__provision_type == "iso"
 
-# Roadmap: Provision Windows VMs from ISO images
+#  Roadmap: Provision Windows VMs from ISO images
 #
 #    - name: "Provision Windows VM from ISO image | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
