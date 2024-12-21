@@ -7,9 +7,9 @@ pve_vm__validate_certs: true
 pve_vm__node: "pve"
 
 # Default values of VM type
-pve_vm__vm_os_type: "linux" # "linux" | "windows"
-pve_vm__vm_os_name: "ubuntu" # "ubuntu" | "debian" | "centos" | "fedora" | "archlinux" | "opensuse" | "alpine" | "flatcar"
-pve_vm__provision_type: "tpl" # "tpl" | "iso"
+pve_vm__vm_os_type: "linux"
+pve_vm__vm_os_name: "ubuntu"
+pve_vm__provision_type: "tpl"
 
 # Default values of VM settings
 pve_vm__vm_settings:
@@ -33,13 +33,13 @@ pve_vm__vm_force_stop: true
 
 # Default values of VM template settings
 pve_vm__vm_template:
-  memory: 512 # In MB
+  memory: 512
   cores: 1
   sockets: 1
   net: "vmbr0"
   net_address: "ip=dhcp"
   storage: "local-lvm"
-  disk_size: 5 # In GB
+  disk_size: 5
 
 # Default values of user-data and network-config for cloud-init
 pve_vm__user_data:
@@ -47,22 +47,22 @@ pve_vm__user_data:
   fqdn: ""
   users:
     - name: "user"
-      ssh_authorized_keys: [] # List of SSH public keys
-      sudo: "ALL=(ALL) NOPASSWD:ALL" # Sudo configuration
-      groups: "sudo" # List of groups
+      ssh_authorized_keys: []
+      sudo: "ALL=(ALL) NOPASSWD:ALL"
+      groups: "sudo"
       home: "/home/user"
       shell: "/bin/bash"
       lock_passwd: false
       passwd: ""
-  packages: [] # List of packages to install
-  write_files: [] # List of files to write
-  runcmd: [] # List of commands to run at first boot
+  packages: []
+  write_files: []
+  runcmd: []
 
 pve_vm__network_config:
   net:
     dhcp: true
-    addresses: [] # List ips In CIDR notation
+    addresses: []
     gateway: ""
-    dns_nameservers: [] # List of DNS servers
-    dns_search: [] # List of DNS search domains
-    routes: [] # List of routes
+    dns_nameservers: []
+    dns_search: []
+    routes: []
