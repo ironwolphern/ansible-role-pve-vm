@@ -3,7 +3,7 @@ name: Feature Request
 description: Suggest an idea for this project
 title: "[Feature]: "
 labels: ["feature"]
-projects: ["octo-org/1", "octo-org/44"]
+projects: ["ansible-role-pve-vm"]
 assignees:
   - ironwolphern
 body:
@@ -61,7 +61,7 @@ body:
       label: Code of Conduct
       description: |
         By submitting this issue,
-        you agree to follow our [Code of Conduct](https://example.com)
+        you agree to follow our [Code of Conduct](https://github.com/ironwolphern/ansible-role-pve-vm/blob/master/CODE_OF_CONDUCT.md)
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true

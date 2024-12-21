@@ -2,5 +2,5 @@
 
 ## Release 1.0.0
 
-December 2023
-  - Initial release of `ansible/template-ansible-role`
+December 2024
+  - Initial release of `ansible/ansible-role-pve-vm`

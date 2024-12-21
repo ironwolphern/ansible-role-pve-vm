@@ -1,6 +1,27 @@
 ---
-- name: Test playbook
+- name: "Mange VMs on Proxmox VE"
   hosts: localhost
-  remote_user: root
-#  roles:
-#    - template-ansible-role
+  gather_facts: true
+
+  roles:
+    - role: ansible-role-pve-vm
+      vars:
+        pve_vm__api_host: "pve.example.local"
+        pve_vm__api_user: "root@pam"
+        pve_vm__api_password: "ChangeMe"
+        pve_vm__node: "pve"
+        pve_vm__vm_os_type: "linux"
+        pve_vm__vm_os_name: "ubuntu"
+        pve_vm__provision_type: "iso"
+        pve_vm__vm_settings:
+          name: "test-vm"
+          domain: "example.local"
+          cores: 1
+          sockets: 1
+          machine: "q35"
+          memory: 512
+          net: "vmbr0"
+          iso_storage: "local"
+          iso: "image.iso"
+          storage: "local-lvm"
+          disk_size: 10

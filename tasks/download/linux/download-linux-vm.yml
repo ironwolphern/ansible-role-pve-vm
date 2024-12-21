@@ -1,0 +1,110 @@
+---
+- name: "Set template facts based on choice | Download | {{ _title_pfx }}"
+  ansible.builtin.set_fact:
+    pve_vm__template: "{{ _templates_linux[pve_vm__vm_os_name] }}"
+  when: pve_vm__provision_type == "tpl" and pve_vm__vm_os_name in _templates_linux
+
+- name: "Check if VM template already exists | Download | {{ _title_pfx }}"
+  community.general.proxmox_vm_info:
+    api_host: "{{ pve_vm__api_host }}"
+    api_user: "{{ pve_vm__api_user }}"
+    api_password: "{{ pve_vm__api_password }}"
+    validate_certs: "{{ pve_vm__validate_certs }}"
+    vmid: "{{ pve_vm__template.id }}"
+    node: "{{ pve_vm__node }}"
+  register: _vm_info
+
+- name: "If VM template not exists | Download | {{ _title_pfx }}"
+  when: _vm_info.proxmox_vms | length == 0
+  block:
+    - name: "Create tmp directory | Download | {{ _title_pfx }}"
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: "pve_vm"
+      register: _tmp_host_dir
+      delegate_to: "{{ pve_vm__api_host }}"
+
+    - name: "Download cloud image | Download | {{ _title_pfx }}"
+      ansible.builtin.get_url:
+        url: "{{ pve_vm__template.url }}"
+        dest: "{{ _tmp_host_dir.path }}/{{ pve_vm__template.file }}"
+        mode: "0644"
+      delegate_to: "{{ pve_vm__api_host }}"
+
+    - name: "Create VM Template | Download | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        vmid: "{{ pve_vm__template.id }}"
+        ostype: "l26"
+        name: "{{ pve_vm__template.name }}"
+        cores: "{{ pve_vm__vm_template.cores }}"
+        sockets: "{{ pve_vm__vm_template.sockets }}"
+        cpu: "host"
+        memory: "{{ pve_vm__vm_template.memory }}"
+        scsihw: "virtio-scsi-pci"
+        agent: "enabled=1,fstrim_cloned_disks=1"
+        serial:
+          serial0: "socket"
+        vga: "serial0"
+        net:
+          net0: "virtio,bridge={{ pve_vm__vm_template.net }}"
+        ipconfig:
+          ipconfig0: "{{ pve_vm__vm_template.net_address }}"
+        state: "present"
+
+    - name: "Import cloud image disk to VM Template | Download | {{ _title_pfx }}"
+      community.general.proxmox_disk:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        vmid: "{{ pve_vm__template.id }}"
+        import_from: "{{ _tmp_host_dir.path }}/{{ pve_vm__template.file }}"
+        storage: "{{ pve_vm__vm_template.storage }}"
+        disk: "scsi0"
+        state: "present"
+
+    - name: "Configure Cloud-init and aditional settings | Download | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        vmid: "{{ pve_vm__template.id }}"
+        boot: "order=scsi0"
+        ide:
+          ide2: "{{ pve_vm__vm_template.storage }}:cloudinit,media=cdrom"
+        update: true
+        update_unsafe: true
+
+    - name: "Resize disk to new size | Download | {{ _title_pfx }}"
+      ansible.builtin.command:
+        cmd: "qm disk resize {{ pve_vm__template.id }} scsi0 {{ pve_vm__vm_template.disk_size }}G"
+      delegate_to: "{{ pve_vm__api_host }}"
+      changed_when: false
+
+    - name: "Convert a template | Download | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        vmid: "{{ pve_vm__template.id }}"
+        state: "template"
+
+    - name: "Remove downloaded cloud image | Download | {{ _title_pfx }}"
+      ansible.builtin.file:
+        path: "{{ _tmp_host_dir.path }}"
+        state: "absent"
+      delegate_to: "{{ pve_vm__api_host }}"
+
+- name: "If VM template exists | Download | {{ _title_pfx }}"
+  when: _vm_info.proxmox_vms | length > 0
+  ansible.builtin.debug:
+    msg: "Template with id: {{ pve_vm__template.id }} and OS name: {{ pve_vm__template.name }} already exists"

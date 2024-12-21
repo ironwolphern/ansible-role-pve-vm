@@ -1,0 +1,17 @@
+version: 2
+ethernets:
+  ens18:
+    dhcp4: {{ pve_vm__network_config.net.dhcp | lower}}
+    optional: true
+{% if pve_vm__network_config.net.dhcp == false %}
+    addresses: {{ pve_vm__network_config.net.addresses }}
+    gateway4: {{ pve_vm__network_config.net.gateway }}
+    nameservers:
+      {%- if pve_vm__network_config.net.dns_search is defined and pve_vm__network_config.net.dns_search | length > 0 %}
+      search: {{ pve_vm__network_config.net.dns_search }}
+      {%- endif %}
+      addresses: {{ pve_vm__network_config.net.dns_nameservers }}
+    {%- if pve_vm__network_config.net.routes is defined and pve_vm__network_config.net.routes | length > 0 %}
+    routes: {{ pve_vm__network_config.net.routes }}
+    {%- endif %}
+{% endif %}

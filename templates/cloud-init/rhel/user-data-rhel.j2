@@ -1,0 +1,37 @@
+#cloud-config
+hostname: {{ pve_vm__user_data.hostname }}
+{% if pve_vm__user_data.fqdn is defined and pve_vm__user_data.fqdn | length > 0 %}
+fqdn: {{ pve_vm__user_data.fqdn }}
+{% endif %}
+
+# Users and Groups
+users:
+  - name: {{ pve_vm__user_data.users[0].name }}
+    sudo: {{ pve_vm__user_data.users[0].sudo }}
+    groups: {{ pve_vm__user_data.users[0].groups }}
+    home: {{ pve_vm__user_data.users[0].home }}
+    shell: {{ pve_vm__user_data.users[0].shell }}
+    lock_passwd: {{ pve_vm__user_data.users[0].lock_passwd | lower}}
+    ssh-authorized-keys: {{ pve_vm__user_data.users[0].ssh_authorized_keys }}
+    {%- if pve_vm__user_data.users[0].passwd is defined and pve_vm__user_data.users[0].passwd | length > 0 and not pve_vm__user_data.users[0].lock_passwd %}
+    passwd: {{ pve_vm__user_data.users[0].passwd }}
+    {%- endif %}
+
+
+# Package Management
+package_reboot_if_required: true
+package_update: true
+
+{% if pve_vm__user_data.packages is defined and pve_vm__user_data.packages | length > 0 %}
+packages: {{ pve_vm__user_data.packages }}
+{% endif %}
+
+{% if pve_vm__user_data.write_files is defined and pve_vm__user_data.write_files | length > 0 %}
+# Custom Files
+write_files: {{ pve_vm__user_data.write_files }}
+{% endif %}
+
+{% if pve_vm__user_data.runcmd is defined and pve_vm__user_data.runcmd | length > 0 %}
+# Run Commands
+runcmd: {{ pve_vm__user_data.runcmd }}
+{% endif %}

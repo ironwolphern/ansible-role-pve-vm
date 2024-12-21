@@ -1,3 +1,49 @@
 ---
 # Title prefix for role
 _title_pfx: "{{ role_name | d('', true) }}"
+
+# Default values of VM cloud init configuration
+_host_snippets: "/var/lib/vz/snippets"
+
+# Proxmox VE Virtual Machine Templates for Linux Cloud Images
+_templates_linux:
+  ubuntu:
+    name: "ubuntu"
+    id: 9000
+    url: "https://cloud-images.ubuntu.com/minimal/releases/noble/release/ubuntu-24.04-minimal-cloudimg-amd64.img"
+    file: "ubuntu.img"
+  debian:
+    name: "debian"
+    id: 9001
+    url: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-nocloud-amd64.qcow2"
+    file: "debian.qcow2"
+  centos:
+    name: "centos"
+    id: 9002
+    url: "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"
+    file: "centos.qcow2"
+  fedora:
+    name: "fedora"
+    id: 9003
+    url: "https://mirror.raiolanetworks.com/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2"
+    file: "fedora.qcow2"
+  archlinux:
+    name: "arch-linux"
+    id: 9004
+    url: "https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2"
+    file: "archlinux.qcow2"
+  opensuse:
+    name: "opensuse"
+    id: 9005
+    url: "https://download.opensuse.org/distribution/leap-micro/6.0/appliances/openSUSE-Leap-Micro.x86_64-Default-qcow.qcow2"
+    file: "opensuse.qcow2"
+  alpine:
+    name: "alpine"
+    id: 9006
+    url: "https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/cloud/nocloud_alpine-3.21.0-x86_64-bios-cloudinit-r0.qcow2"
+    file: "alpine.qcow2"
+  flatcar:
+    name: "flatcar"
+    id: 9007
+    url: "https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_qemu_image.img"
+    file: "flatcar.img"

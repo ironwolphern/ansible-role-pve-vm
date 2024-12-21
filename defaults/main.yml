@@ -1,3 +1,68 @@
 ---
-# Configuration paths
-example__tmp_dir: /tmp/example
+# Proxmox VE API configuration
+pve_vm__api_host: "localhost"
+pve_vm__api_user: "root@pam"
+pve_vm__api_password: ""
+pve_vm__validate_certs: true
+pve_vm__node: "pve"
+
+# Default values of VM type
+pve_vm__vm_os_type: "linux"
+pve_vm__vm_os_name: "ubuntu"
+pve_vm__provision_type: "tpl"
+
+# Default values of VM settings
+pve_vm__vm_settings:
+  name: ""
+  domain: ""
+  iso_storage: "local"
+  iso: ""
+  clone: ""
+  cores: 1
+  sockets: 1
+  machine: "i440fx"
+  memory: 512
+  net: "vmbr0"
+  storage: "local-lvm"
+  disk_size: 5
+  description: ""
+  tags: []
+
+pve_vm__vm_force_delete: false
+pve_vm__vm_force_stop: true
+
+# Default values of VM template settings
+pve_vm__vm_template:
+  memory: 512
+  cores: 1
+  sockets: 1
+  net: "vmbr0"
+  net_address: "ip=dhcp"
+  storage: "local-lvm"
+  disk_size: 5
+
+# Default values of user-data and network-config for cloud-init
+pve_vm__user_data:
+  hostname: ""
+  fqdn: ""
+  users:
+    - name: "user"
+      ssh_authorized_keys: []
+      sudo: "ALL=(ALL) NOPASSWD:ALL"
+      groups: "sudo"
+      home: "/home/user"
+      shell: "/bin/bash"
+      lock_passwd: false
+      passwd: ""
+  packages: []
+  write_files: []
+  runcmd: []
+
+pve_vm__network_config:
+  net:
+    dhcp: true
+    addresses: []
+    gateway: ""
+    dns_nameservers: []
+    dns_search: []
+    routes: []
