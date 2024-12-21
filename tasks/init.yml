@@ -33,4 +33,4 @@
         - pve_vm__node
         - pve_vm__vm_os_type
         - pve_vm__vm_os_name
-        - pve_vm__vm_type
+        - pve_vm__provision_type

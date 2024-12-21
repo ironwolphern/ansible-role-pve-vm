@@ -1,23 +1,26 @@
 ---
 # Proxmox VE API configuration
-pve_vm__api_host: "pve.example.com"
-pve_vm__api_user: ""
+pve_vm__api_host: "localhost"
+pve_vm__api_user: "root@pam"
 pve_vm__api_password: ""
 pve_vm__validate_certs: true
-pve_vm__node: ""
+pve_vm__node: "pve"
 
-# Default values of VM configuration
+# Default values of VM type
 pve_vm__vm_os_type: "linux" # "linux" | "windows"
 pve_vm__vm_os_name: "ubuntu" # "ubuntu" | "debian" | "centos" | "fedora" | "archlinux" | "opensuse" | "alpine" | "flatcar"
-pve_vm__vm_type: "tpl" # "tpl" | "iso"
+pve_vm__provision_type: "tpl" # "tpl" | "iso"
 
 # Default values of VM settings
 pve_vm__vm_settings:
   name: ""
-  domain: "example.com"
+  domain: ""
+  iso_storage: "local"
+  iso: ""
   clone: ""
   cores: 1
   sockets: 1
+  machine: "i440fx"
   memory: 512
   net: "vmbr0"
   storage: "local-lvm"
@@ -34,6 +37,7 @@ pve_vm__vm_template:
   cores: 1
   sockets: 1
   net: "vmbr0"
+  net_address: "ip=dhcp"
   storage: "local-lvm"
   disk_size: 5 # In GB
 

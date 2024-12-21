@@ -13,7 +13,7 @@
         fail_msg: "Required parameter '{{ item }}' is not defined."
         success_msg: "Required parameter '{{ item }}' is ok."
         quiet: true
-      when: pve_vm__vm_type == "tpl"
+      when: pve_vm__provision_type == "tpl"
       loop:
         - pve_vm__vm_settings.name
         - pve_vm__vm_settings.clone
@@ -21,30 +21,35 @@
     - name: "Provision Linux VM from template | Provision | {{ _title_pfx }}"
       ansible.builtin.import_tasks:
         file: "provision/linux/provision-linux-vm-tpl.yml"
-      when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "tpl"
+      when: pve_vm__vm_os_type == "linux" and pve_vm__provision_type == "tpl"
 
+# Roadmap: Provision Windows VMs from templates
+#
 #    - name: "Provision Windows VM from template | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
 #        file: "provision/windows/provision-windows-vm-tpl.yml"
-#      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "tpl"
-#
-#    - name: "Check required parameters for ISO | Provision | {{ _title_pfx }}"
-#      ansible.builtin.assert:
-#        that:
-#          - "{{ item }}|d('',true)|length > 0"
-#        fail_msg: "Required parameter '{{ item }}' is not defined."
-#        success_msg: "Required parameter '{{ item }}' is ok."
-#        quiet: true
-#      when: pve_vm__vm_type == "iso"
-#      loop:
-#
-#
-#    - name: "Provision Linux VM from ISO image | Provision | {{ _title_pfx }}"
-#      ansible.builtin.import_tasks:
-#        file: "provision/linux/provision-linux-vm-iso.yml"
-#      when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "iso"
+#      when: pve_vm__vm_os_type == "windows" and pve_vm__provision_type == "tpl"
+
+    - name: "Check required parameters for ISO | Provision | {{ _title_pfx }}"
+      ansible.builtin.assert:
+        that:
+          - "{{ item }} | d('', true) | length > 0"
+        fail_msg: "Required parameter '{{ item }}' is not defined."
+        success_msg: "Required parameter '{{ item }}' is ok."
+        quiet: true
+      when: pve_vm__provision_type == "iso"
+      loop:
+        - pve_vm__vm_settings.name
+        - pve_vm__vm_settings.iso
+
+    - name: "Provision Linux VM from ISO image | Provision | {{ _title_pfx }}"
+      ansible.builtin.import_tasks:
+        file: "provision/linux/provision-linux-vm-iso.yml"
+      when: pve_vm__vm_os_type == "linux" and pve_vm__provision_type == "iso"
+
+# Roadmap: Provision Windows VMs from ISO images
 #
 #    - name: "Provision Windows VM from ISO image | Provision | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
 #        file: "provision/windows/provision-windows-vm-iso.yml"
-#      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "iso"
+#      when: pve_vm__vm_os_type == "windows" and pve_vm__provision_type == "iso"

@@ -2,7 +2,7 @@
 - name: "Set template facts based on choice | Download | {{ _title_pfx }}"
   ansible.builtin.set_fact:
     pve_vm__template: "{{ _templates_linux[pve_vm__vm_os_name] }}"
-  when: pve_vm__vm_type == "tpl" and pve_vm__vm_os_name in _templates_linux
+  when: pve_vm__provision_type == "tpl" and pve_vm__vm_os_name in _templates_linux
 
 - name: "Check if VM template already exists | Download | {{ _title_pfx }}"
   community.general.proxmox_vm_info:
@@ -53,7 +53,7 @@
         net:
           net0: "virtio,bridge={{ pve_vm__vm_template.net }}"
         ipconfig:
-          ipconfig0: "ip=dhcp"
+          ipconfig0: "{{ pve_vm__vm_template.net_address }}"
         state: "present"
 
     - name: "Import cloud image disk to VM Template | Download | {{ _title_pfx }}"

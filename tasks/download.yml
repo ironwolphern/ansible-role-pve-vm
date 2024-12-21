@@ -9,9 +9,15 @@
     - name: "Download cloud image for Linux VM | Download | {{ _title_pfx }}"
       ansible.builtin.import_tasks:
         file: "download/linux/download-linux-vm.yml"
-      when: pve_vm__vm_os_type == "linux" and pve_vm__vm_type == "tpl"
+      when: pve_vm__vm_os_type == "linux" and pve_vm__provision_type == "tpl"
 
+# Roadmap: Download cloud images for Windows VMs
+#
 #    - name: "Download cloud image for Windows VM | Download | {{ _title_pfx }}"
 #      ansible.builtin.import_tasks:
 #        file: "download/windows/download-windows-vm.yml"
-#      when: pve_vm__vm_os_type == "windows" and pve_vm__vm_type == "tpl"
+#      when: pve_vm__vm_os_type == "windows" and pve_vm__provision_type == "tpl"
+#
+# Roadmap: Download ISO images for Linux VMs
+#
+# Roadmap: Download ISO images for Windows VMs

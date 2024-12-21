@@ -19,8 +19,71 @@
         api_password: "{{ pve_vm__api_password }}"
         validate_certs: "{{ pve_vm__validate_certs }}"
         node: "{{ pve_vm__node }}"
+        ostype: "l26"
         name: "{{ pve_vm__vm_settings.name }}"
+        cores: "{{ pve_vm__vm_settings.cores }}"
+        sockets: "{{ pve_vm__vm_settings.sockets }}"
+        machine: "{{ pve_vm__vm_settings.machine }}"
+        cpu: "host"
+        boot: "order=scsi0;ide2;net0"
+        memory: "{{ pve_vm__vm_settings.memory }}"
+        scsihw: "virtio-scsi-pci"
+        agent: "enabled=1,fstrim_cloned_disks=1"
         storage: "{{ pve_vm__vm_settings.storage }}"
+        serial:
+          serial0: "socket"
+        vga: "serial0"
+        ide:
+          ide2: "{{ pve_vm__vm_settings.iso_storage }}:iso/{{ pve_vm__vm_settings.iso }},media=cdrom"
+        net:
+          net0: "virtio,bridge={{ pve_vm__vm_settings.net }}"
         state: "present"
         timeout: 300
       register: _vm_id
+
+    - name: "Add Description to VM | Provision | Linux | ISO | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        description: "{{ pve_vm__vm_settings.description }}"
+        update: true
+      when: pve_vm__vm_settings.description is defined and pve_vm__vm_settings.description | length > 0
+
+    - name: "Add Tags to VM | Provision | Linux | ISO | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        tags: "{{ pve_vm__vm_settings.tags }}"
+        update: true
+      when: pve_vm__vm_settings.tags is defined and pve_vm__vm_settings.tags | length > 0
+
+    - name: "Protect VM from deletion | Provision | Linux | ISO | {{ _title_pfx }}"
+      community.general.proxmox_kvm:
+        api_host: "{{ pve_vm__api_host }}"
+        api_user: "{{ pve_vm__api_user }}"
+        api_password: "{{ pve_vm__api_password }}"
+        validate_certs: "{{ pve_vm__validate_certs }}"
+        node: "{{ pve_vm__node }}"
+        name: "{{ pve_vm__vm_settings.name }}"
+        protection: true
+        update: true
+
+    - name: "Print VM info | Provision | Linux | ISO | {{ _title_pfx }}"
+      ansible.builtin.debug:
+        msg:
+          - "VM provisioned details:"
+          - "   Name:  {{ pve_vm__vm_settings.name }}"
+          - "   VM ID: {{ _vm_id.vmid }}"
+
+- name: "If VM exists | Provision | Linux | ISO | {{ _title_pfx }}"
+  when: _vm_info.proxmox_vms | length > 0
+  ansible.builtin.debug:
+    msg: "VM with name: '{{ pve_vm__vm_settings.name }}' already exists"

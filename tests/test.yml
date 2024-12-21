@@ -10,3 +10,18 @@
         pve_vm__api_user: "root@pam"
         pve_vm__api_password: "ChangeMe"
         pve_vm__node: "pve"
+        pve_vm__vm_os_type: "linux"
+        pve_vm__vm_os_name: "ubuntu"
+        pve_vm__provision_type: "iso"
+        pve_vm__vm_settings:
+          name: "test-vm"
+          domain: "example.local"
+          cores: 1
+          sockets: 1
+          machine: "q35"
+          memory: 512
+          net: "vmbr0"
+          iso_storage: "local"
+          iso: "image.iso"
+          storage: "local-lvm"
+          disk_size: 10
