@@ -111,6 +111,10 @@ Unprotect vm to erase
   ansible-playbook -i inventory play-pve-vm.yml -t unprotect
 ```
 
+## *Roadmap*
+
+For upcoming versions, add support to windows vm and iso machines linux and windows.
+
 ## *License*
 
 MIT
