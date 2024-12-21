@@ -97,7 +97,7 @@
       delegate_to: "{{ pve_vm__api_host }}"
       changed_when: false
 
-#  ALTERNATIVE WAY TO RESIZE DISK (LESS ACCURATE)
+#    ALTERNATIVE WAY TO RESIZE DISK (LESS ACCURATE)
 #    - name: "Resize disk to new size | Provision | Linux | TPL | {{ _title_pfx }}"
 #      community.general.proxmox_disk:
 #        api_host: "{{ pve_vm__api_host }}"
